@@ -1,10 +1,17 @@
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, abort
 from sys import argv
 
 app = Flask(__name__)
 device = AudioUtilities.GetSpeakers()
 volume = device.EndpointVolume.QueryInterface(IAudioEndpointVolume)
+
+WHITELIST = argv[2].split(',')
+
+@app.before_request
+def whitelist():
+    if request.remote_addr not in WHITELIST:
+        abort(403) # Forbidden
 
 @app.route('/volume', methods=['POST'])
 def set_volume():

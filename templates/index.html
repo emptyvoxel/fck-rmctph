@@ -4,20 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F*ck RMCTPH</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #000;
+        }
+
+        .content {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        input[type=range] {
+            appearance: none;
+            width: 300px;
+            height: 12px;
+            transform: rotate(-90deg);
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            appearance: none;
+            width: 48px;
+            height: 48px;
+            margin-top: -18px;
+            border-radius: 50%;
+            background: #fff;
+            border: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(
+                to right,
+                #38aecc 0%,
+                #38aecc var(--fill),
+                #000 var(--fill),
+                #000 100%
+            );
+        }
+    </style>
 </head>
 <body>
-    <input type="range" id="volume" min="0" max="100" value="{{ value }}" step="1">
+    <div class="content">
+        <input type="range" id="volume" min="0" max="100" value="{{ value }}" step="1">
+    </div>
 
     <script>
         const volume = document.getElementById('volume');
+        volume.style.setProperty('--fill', `${volume.value}%`);
 
-        volume.addEventListener('input', () => fetch('/volume', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ level: volume.value })
-        }));
+        volume.addEventListener('input', () => {
+            volume.style.setProperty('--fill', `${volume.value}%`);
+            
+            fetch('/volume', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ level: volume.value })
+            });
+        });
     </script>
 </body>
 </html> 

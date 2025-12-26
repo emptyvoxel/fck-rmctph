@@ -1,5 +1,6 @@
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
+from sys import argv
 
 app = Flask(__name__)
 device = AudioUtilities.GetSpeakers()
@@ -14,11 +15,12 @@ def set_volume():
         return jsonify({'error': 'missing level'}), 400 # Bad request
     
     volume.SetMasterVolumeLevelScalar(int(level) / 100.0, None)
-    return jsonify({'volume': level}), 200
+    return jsonify({'volume': level}), 200 # OK
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    level = int(volume.GetMasterVolumeLevelScalar() * 100)
+    return render_template('index.html', value=level)
 
 if __name__ == '__main__':
-    app.run('127.0.0.1', port=5000)
+    app.run(host=argv[1], port=5000)

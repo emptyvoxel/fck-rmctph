@@ -9,6 +9,7 @@
             height: 100%;
             margin: 0;
             background: #000;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .content {
@@ -19,7 +20,18 @@
             position: relative;
         }
 
+        .label {
+            position: absolute;
+            font-size: 17rem;
+            font-weight: 800;
+            color: #fff3;
+            user-select: none;
+            pointer-events: none;
+            touch-action: none;
+        }
+
         input[type=range] {
+            touch-action: none;
             appearance: none;
             width: 300px;
             height: 12px;
@@ -53,15 +65,18 @@
 </head>
 <body>
     <div class="content">
+        <div class="label" id="label">{{ value }}</div>
         <input type="range" id="volume" min="0" max="100" value="{{ value }}" step="1">
     </div>
 
     <script>
         const volume = document.getElementById('volume');
+        const label = document.getElementById('label');
         volume.style.setProperty('--fill', `${volume.value}%`);
 
         volume.addEventListener('input', () => {
             volume.style.setProperty('--fill', `${volume.value}%`);
+            label.innerText = volume.value;
             
             fetch('/volume', {
                 method: 'POST',

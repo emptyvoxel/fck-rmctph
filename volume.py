@@ -21,7 +21,8 @@ def set_volume():
     if level is None:
         return jsonify({'error': 'missing level'}), 400 # Bad request
     
-    volume.SetMasterVolumeLevelScalar(int(level) / 100.0, None)
+    level = max(0, min(100, int(level))) # Prevents console fetch
+    volume.SetMasterVolumeLevelScalar(level / 100.0, None)
     return jsonify({'volume': level}), 200 # OK
 
 @app.route('/')

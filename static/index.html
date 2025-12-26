@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F*ck RMCTPH</title>
+</head>
+<body>
+    <input type="range" id="volume" min="0" max="100" value="50" step="1">
+
+    <script>
+        const volume = document.getElementById('volume');
+
+        volume.addEventListener('input', () => fetch('/volume', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ level: volume.value })
+        }));
+    </script>
+</body>
+</html> 

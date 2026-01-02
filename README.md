@@ -1,6 +1,6 @@
 # fck-rmctph
 
-Basically, my TV remote decided to stop working. Since I only needed the volume buttons, I built this tiny Flask (currently) Rust server to control Windows volume over LAN instead.
+Basically, my TV remote decided to stop working. Since I only needed the volume buttons, I built this tiny <s>Flask</s> Rust server to control Windows volume over LAN instead.
 
 ## that-escalated version
 

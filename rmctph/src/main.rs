@@ -15,7 +15,6 @@ fn set_volume (volume: u8) {
         }
     }};
 
-    println!("Removing condons and starting integration hell...");
     unsafe {
         CoInitializeEx(None, COINIT_APARTMENTTHREADED).unwrap();
 
@@ -37,13 +36,11 @@ fn set_volume (volume: u8) {
             .SetMasterVolumeLevelScalar((volume as f32) / 100.0, ptr::null())
             .unwrap();
     }
-
-    println!("It worked (theoretically): {}", volume);
 }
 
-fn run_server(addr: &str) {
-    let server = Server::http(addr).unwrap();
-    println!("Starting server at {}...", addr);
+fn run_server(addr: String) {
+    let server = Server::http(&addr).unwrap();
+    println!("Starting server at {}", addr);
 
     for mut request in server.incoming_requests() {
         if request.method() == &Method::Post && request.url() == "/volume" {
@@ -53,8 +50,6 @@ fn run_server(addr: &str) {
                 .as_reader()
                 .read_to_string(&mut body)
                 .unwrap();
-
-            println!("Request from client: {}...", body);
 
             if let Some(level) = body.strip_prefix("level=") {
                 if let Ok(volume) = level.parse::<u8>() {
@@ -85,5 +80,11 @@ fn run_server(addr: &str) {
 }
 
 fn main() {
-    run_server("0.0.0.0:5000");
+    use std::env;
+
+    let addr = env::args()
+        .nth(1)
+        .unwrap_or_else(|| "0.0.0.0:5000".to_string());
+
+    run_server(addr);
 }

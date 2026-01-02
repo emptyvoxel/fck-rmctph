@@ -1,4 +1,4 @@
-use tiny_http::{Method, Response, Server, Request};
+use tiny_http::{Method, Response, Server, Request, Header};
 use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
 
 // This function initializes the unsafe WASAPI stuff.
@@ -96,6 +96,16 @@ fn shutdown(request: Request) {
     );
 }
 
+// Index page renderer
+fn index(request: Request) {
+    let html = include_str!("index.html");
+
+    let response = Response::from_string(html)
+        .with_header("Content-Type: text/html".parse::<Header>().unwrap());
+
+    let _ = request.respond(response);
+}
+
 fn run_server(addr: String) {
     println!("Starting WASAPI stuff...");
     let endpoint: IAudioEndpointVolume = init_volume();
@@ -112,6 +122,9 @@ fn run_server(addr: String) {
             (&Method::Post, "/shutdown") => {
                 shutdown(request);
                 break;
+            }
+            (&Method::Get, "/") => {
+                index(request);
             }
             (&Method::Post, _) => {
                 // Invalid endpoint clause

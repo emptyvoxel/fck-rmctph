@@ -60,6 +60,42 @@ fn set_volume(volume: u8, endpoint: &IAudioEndpointVolume) {
     }
 }
 
+// Volume API handler
+fn volume(mut request: Request, endpoint: &IAudioEndpointVolume) {
+    let mut body = String::new();
+
+    request
+        .as_reader()
+        .read_to_string(&mut body)
+        .unwrap();
+
+    if let Some(level) = body.strip_prefix("level=") {
+        if let Ok(volume) = level.parse::<u8>() {
+            if volume <= 100 {
+                set_volume(volume, &endpoint);
+
+                let _ = request.respond(
+                    Response::from_string("OK")
+                        .with_status_code(200)
+                );
+            }
+        }
+    } else {
+        let _ = request.respond(
+            Response::from_string("Bad request")
+                .with_status_code(400)
+        );
+    }
+}
+
+// Shutdown API handler
+fn shutdown(request: Request) {
+    let _ = request.respond(
+        Response::from_string("Shutting down")
+            .with_status_code(200)
+    );
+}
+
 fn run_server(addr: String) {
     println!("Starting WASAPI stuff...");
     let endpoint: IAudioEndpointVolume = init_volume();
@@ -68,40 +104,29 @@ fn run_server(addr: String) {
     let server = Server::http(&addr).unwrap();
 
     println!("All operational!");
-    for mut request in server.incoming_requests() {
-        if request.method() == &Method::Post && request.url() == "/volume" {
-            let mut body = String::new();
-
-            request
-                .as_reader()
-                .read_to_string(&mut body)
-                .unwrap();
-
-            if let Some(level) = body.strip_prefix("level=") {
-                if let Ok(volume) = level.parse::<u8>() {
-                    if volume <= 100 {
-                        // Borrows endpoint from outside loop
-                        set_volume(volume, &endpoint);
-
-                        let _ = request.respond(
-                            Response::from_string("OK")
-                                .with_status_code(200)
-                        );
-
-                        continue;
-                    }
-                }
+    for request in server.incoming_requests() {
+        match (request.method(), request.url()) {
+            (&Method::Post, "/volume") => {
+                volume(request, &endpoint);
             }
-
-            let _ = request.respond(
-                Response::from_string("Bad request")
-                    .with_status_code(400)
-            );
-        } else {
-            let _ = request.respond(
-                Response::from_string("Something Went Wrong")
-                    .with_status_code(500)
-            );
+            (&Method::Post, "/shutdown") => {
+                shutdown(request);
+                break;
+            }
+            (&Method::Post, _) => {
+                // Invalid endpoint clause
+                let _ = request.respond(
+                    Response::from_string("Bad request")
+                        .with_status_code(400)
+                );
+            }
+            _ => {
+                // Not POST clause
+                let _ = request.respond(
+                    Response::from_string("Method not allowed")
+                        .with_status_code(405)
+                );
+            }
         }
     }
 }

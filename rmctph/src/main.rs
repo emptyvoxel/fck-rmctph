@@ -1,12 +1,49 @@
 use tiny_http::{Method, Response, Server};
 
 fn set_volume (volume: u8) {
-    println!("volume set to {}", volume);
+    use std::ptr;
+    use windows::{
+        Win32::{
+        Media::Audio::{
+            Endpoints::IAudioEndpointVolume, IMMDeviceEnumerator, MMDeviceEnumerator, eConsole, eRender
+        },
+        System::Com::{
+            CLSCTX_ALL,
+            COINIT_APARTMENTTHREADED,
+            CoCreateInstance,
+            CoInitializeEx
+        }
+    }};
+
+    println!("Removing condons and starting integration hell...");
+    unsafe {
+        CoInitializeEx(None, COINIT_APARTMENTTHREADED).unwrap();
+
+        let enumerator: IMMDeviceEnumerator = CoCreateInstance(
+            &MMDeviceEnumerator,
+            None, 
+            CLSCTX_ALL
+        ).unwrap();
+
+        let device = enumerator
+            .GetDefaultAudioEndpoint(eRender, eConsole)
+            .unwrap();
+
+        let endpoint: IAudioEndpointVolume = device
+            .Activate(CLSCTX_ALL, None)
+            .unwrap();
+
+        endpoint
+            .SetMasterVolumeLevelScalar((volume as f32) / 100.0, ptr::null())
+            .unwrap();
+    }
+
+    println!("It worked (theoretically): {}", volume);
 }
 
-fn main() {
-    let ip_addr: &str = "0.0.0.0:5000";
-    let server = Server::http(ip_addr).unwrap();
+fn run_server(addr: &str) {
+    let server = Server::http(addr).unwrap();
+    println!("Starting server at {}...", addr);
 
     for mut request in server.incoming_requests() {
         if request.method() == &Method::Post && request.url() == "/volume" {
@@ -17,7 +54,7 @@ fn main() {
                 .read_to_string(&mut body)
                 .unwrap();
 
-            println!("{}", body);
+            println!("Request from client: {}...", body);
 
             if let Some(level) = body.strip_prefix("level=") {
                 if let Ok(volume) = level.parse::<u8>() {
@@ -45,4 +82,8 @@ fn main() {
             );
         }
     }
+}
+
+fn main() {
+    run_server("0.0.0.0:5000");
 }
